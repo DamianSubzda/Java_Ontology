@@ -1,6 +1,19 @@
+
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.reasoner.NodeSet;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
+import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 public class main extends JFrame {
 
@@ -19,19 +32,35 @@ public class main extends JFrame {
     private JTextField tf_kalorie;
     private ButtonGroup wegle = new ButtonGroup();
     private ButtonGroup tluszcze = new ButtonGroup();
+    private List<String> witaminy = new ArrayList<String>();
+    private String prefix = "http://www.semanticweb.org/damian/ontologies/2022/11/untitled-ontology-6#";
 
-    public static void main(String [] args){
-        main m1 = new main();
+    public static void main(String[] args) {
+        new main();
     }
 
-    main(){
+    main() {
+        OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
+        OWLOntology owlOntology = null;
+        try {
+            File file = new File("zywnosc.owl");
+            owlOntology = ontologyManager.loadOntologyFromOntologyDocument(file);
+        } catch (OWLOntologyCreationException e) {
+            e.printStackTrace();
+        }
+        getWitaminy(ontologyManager, owlOntology);
+
+        DefaultListModel model = new DefaultListModel();
+        witaminy.forEach((item) -> model.addElement(item));
+        witaminyList.setModel(model);
+
         wegle.add(rb_wegle_p);
         wegle.add(rb_wegle_z);
         tluszcze.add(rb_tluszcze_r);
         tluszcze.add(rb_tluszcze_z);
         setTitle("Ontology");
         setContentPane(panel_main);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);;
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         pack();
         setVisible(true);
 
@@ -53,9 +82,29 @@ public class main extends JFrame {
         OK.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                createNewIndiviual();
             }
         });
+    }
+
+    void getWitaminy(OWLOntologyManager ontologyManager, OWLOntology owlOntology){
+        OWLReasonerFactory reasonerFactory = new StructuralReasonerFactory();
+
+        for (OWLClass cls : owlOntology.getClassesInSignature()) {
+
+            if (cls.getIRI().getFragment().equals("Witaminy")) {
+                OWLReasoner reasoner = reasonerFactory.createReasoner(owlOntology);
+                NodeSet<OWLNamedIndividual> instances = reasoner.getInstances(cls, true);
+
+                for (OWLNamedIndividual i : instances.getFlattened()) {
+                    witaminy.add(i.getIRI().getFragment());
+                }
+            }
+        }
+    }
+
+    void createNewIndiviual(){
+        
     }
 
 }

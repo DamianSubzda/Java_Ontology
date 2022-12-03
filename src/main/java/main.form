@@ -169,7 +169,9 @@
                     <children>
                       <component id="1791f" class="javax.swing.JList" binding="witaminyList">
                         <constraints/>
-                        <properties/>
+                        <properties>
+                          <selectionMode value="2"/>
+                        </properties>
                       </component>
                     </children>
                   </scrollpane>
