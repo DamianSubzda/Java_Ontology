@@ -1,4 +1,4 @@
-
+import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.NodeSet;
@@ -10,10 +10,14 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
+
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 public class main extends JFrame {
 
@@ -42,6 +46,10 @@ public class main extends JFrame {
     }
 
     main() {
+        rb_tluszcze_r.setActionCommand("Roślinne");
+        rb_tluszcze_z.setActionCommand("Zwierzęce");
+        rb_wegle_p.setActionCommand("Proste");
+        rb_wegle_z.setActionCommand("Złożone");
         OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
         try {
             File file = new File("zywnosc.owl");
