@@ -34,6 +34,8 @@ public class main extends JFrame {
     private ButtonGroup tluszcze = new ButtonGroup();
     private List<String> witaminy = new ArrayList<String>();
     private String prefix = "http://www.semanticweb.org/damian/ontologies/2022/11/untitled-ontology-6#";
+    private OWLOntology owlOntology = null;
+    private OWLOntology owlOntology_new = null;
 
     public static void main(String[] args) {
         new main();
@@ -41,14 +43,13 @@ public class main extends JFrame {
 
     main() {
         OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
-        OWLOntology owlOntology = null;
         try {
             File file = new File("zywnosc.owl");
             owlOntology = ontologyManager.loadOntologyFromOntologyDocument(file);
         } catch (OWLOntologyCreationException e) {
             e.printStackTrace();
         }
-        getWitaminy(ontologyManager, owlOntology);
+        getWitaminy(owlOntology);
 
         DefaultListModel model = new DefaultListModel();
         witaminy.forEach((item) -> model.addElement(item));
@@ -78,16 +79,16 @@ public class main extends JFrame {
             }
         });
 
-        //Start reasoner
+        //Add to ontology
         OK.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                createNewIndiviual();
+                createNewIndiviual(ontologyManager, owlOntology);
             }
         });
     }
 
-    void getWitaminy(OWLOntologyManager ontologyManager, OWLOntology owlOntology){
+    void getWitaminy(OWLOntology owlOntology) {
         OWLReasonerFactory reasonerFactory = new StructuralReasonerFactory();
 
         for (OWLClass cls : owlOntology.getClassesInSignature()) {
@@ -103,7 +104,100 @@ public class main extends JFrame {
         }
     }
 
-    void createNewIndiviual(){
+    void createNewIndiviual(OWLOntologyManager ontologyManager, OWLOntology owlOntology) {
+        OWLDataFactory owlDataFactory = ontologyManager.getOWLDataFactory();
+
+        OWLIndividual newIndividual = owlDataFactory.getOWLNamedIndividual(IRI.create(prefix + tf_nazwa.getText()));
+
+        //add individual to class
+        OWLClass jedzenieClass = owlDataFactory.getOWLClass(IRI.create(prefix + "Jedzenie"));
+        OWLClassAssertionAxiom axiom = owlDataFactory.getOWLClassAssertionAxiom(jedzenieClass, newIndividual);
+        AddAxiom addAxiom = new AddAxiom(owlOntology, axiom);
+        ontologyManager.applyChange(addAxiom);
+
+        try { //add wegle objectproperty
+            OWLObjectProperty posiadaWeglowodany = owlDataFactory.getOWLObjectProperty(IRI.create(prefix + "posiada_weglowodany"));
+            OWLIndividual wegleInd = owlDataFactory.getOWLNamedIndividual(IRI.create(prefix + wegle.getSelection().getActionCommand()));
+            OWLObjectPropertyAssertionAxiom weglowodanyAxiom =
+                    owlDataFactory.getOWLObjectPropertyAssertionAxiom(posiadaWeglowodany, newIndividual, wegleInd);
+            AddAxiom addWeglowodanyAxiom = new AddAxiom(owlOntology, weglowodanyAxiom);
+            ontologyManager.applyChange(addWeglowodanyAxiom);
+        } catch (NullPointerException e) {
+        }
+
+        try { // add tłuszcze objectproperty
+            OWLObjectProperty posiadaTluszcze = owlDataFactory.getOWLObjectProperty(IRI.create(prefix + "posiada_tłuszcz"));
+            OWLIndividual tluszczeInd = owlDataFactory.getOWLNamedIndividual(IRI.create(prefix + tluszcze.getSelection().getActionCommand()));
+            OWLObjectPropertyAssertionAxiom tluszczeAxiom =
+                    owlDataFactory.getOWLObjectPropertyAssertionAxiom(posiadaTluszcze, newIndividual, tluszczeInd);
+            AddAxiom addTluszczeAxiom = new AddAxiom(owlOntology, tluszczeAxiom);
+            ontologyManager.applyChange(addTluszczeAxiom);
+        } catch (NullPointerException e) {
+        }
+
+        // add witaminy objectproperty
+        OWLObjectProperty posiadaWitaminy = owlDataFactory.getOWLObjectProperty(IRI.create(prefix + "posiada_witaminy"));
+        witaminyList.getSelectedValuesList().forEach((elem) ->{
+            OWLIndividual witaminyInd = owlDataFactory.getOWLNamedIndividual(IRI.create(prefix + elem.toString()));
+            OWLObjectPropertyAssertionAxiom witaminyAxiom =
+                    owlDataFactory.getOWLObjectPropertyAssertionAxiom(posiadaWitaminy, newIndividual, witaminyInd);
+            AddAxiom addWitaminyAxiom = new AddAxiom(owlOntology, witaminyAxiom);
+            ontologyManager.applyChange(addWitaminyAxiom);
+        });
+
+        // add bialko dataproperty
+        OWLDataProperty posiadaBialko = owlDataFactory.getOWLDataProperty(IRI.create(prefix + "posiada_białko"));
+        OWLDataPropertyAssertionAxiom posiadaBialkoAxiom =
+                owlDataFactory.getOWLDataPropertyAssertionAxiom(posiadaBialko, newIndividual, cb_bialko.isSelected());
+        AddAxiom addPosiadaBialko = new AddAxiom(owlOntology, posiadaBialkoAxiom);
+        ontologyManager.applyChange(addPosiadaBialko);
+
+        // add cukier dataproperty
+        OWLDataProperty posiadaCukier = owlDataFactory.getOWLDataProperty(IRI.create(prefix + "posiada_cukier"));
+        OWLDataPropertyAssertionAxiom posiadaCukierAxiom =
+                owlDataFactory.getOWLDataPropertyAssertionAxiom(posiadaCukier, newIndividual, cb_cukier.isSelected());
+        AddAxiom addPosiadaCukier = new AddAxiom(owlOntology, posiadaCukierAxiom);
+        ontologyManager.applyChange(addPosiadaCukier);
+
+        // add kalorie dataproperty
+        if(isNumeric(tf_kalorie.getText())){
+            OWLDataProperty posiadaKalorii = owlDataFactory.getOWLDataProperty(IRI.create(prefix + "posiada_ilość_kalorii"));
+            OWLDataPropertyAssertionAxiom posiadaKaloriiAxiom =
+                    owlDataFactory.getOWLDataPropertyAssertionAxiom(posiadaKalorii, newIndividual, Integer.parseInt(tf_kalorie.getText()));
+            AddAxiom addPosiadaKalorii = new AddAxiom(owlOntology, posiadaKaloriiAxiom);
+            ontologyManager.applyChange(addPosiadaKalorii);
+        }
+
+
+        OutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(new File("zywnosc_new.owl"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            ontologyManager.saveOntology(owlOntology, outputStream);
+        } catch (OWLOntologyStorageException e) {
+            e.printStackTrace();
+        }
+
+        OWLOntologyManager ontologyManager_new = OWLManager.createOWLOntologyManager();
+        try {
+            File file = new File("zywnosc_new.owl");
+            owlOntology_new = ontologyManager_new.loadOntologyFromOntologyDocument(file);
+        } catch (OWLOntologyCreationException e) {
+            e.printStackTrace();
+        }
+
+        OWLReasoner owlReasoner = new Reasoner.ReasonerFactory().createReasoner(owlOntology_new);
+        OWLIndividual addedInd = owlDataFactory.getOWLNamedIndividual(IRI.create(prefix+ tf_nazwa.getText()));
+        NodeSet<OWLNamedIndividual> instances = owlReasoner.getInstances(owlDataFactory.getOWLClass(
+                IRI.create(prefix + "Jedzenie")), true);
+
+        for(OWLNamedIndividual instance: instances.getFlattened()){
+            System.out.println(instance.getIRI());
+        }
+
         
     }
 

@@ -42,6 +42,7 @@ Declaration(NamedIndividual(:Proste))
 Declaration(NamedIndividual(:Roślinne))
 Declaration(NamedIndividual(:Zwierzęce))
 Declaration(NamedIndividual(:Złożone))
+Declaration(NamedIndividual(:test))
 ############################
 #   Object Properties
 ############################
@@ -124,7 +125,7 @@ SubClassOf(:Nabiał :Jedzenie)
 
 # Class: :Owoce (:Owoce)
 
-EquivalentClasses(:Owoce ObjectIntersectionOf(:Jedzenie ObjectSomeValuesFrom(:posiada_tłuszcz ObjectOneOf(:Roślinne)) ObjectSomeValuesFrom(:posiada_weglowodany ObjectOneOf(:Proste)) ObjectSomeValuesFrom(:posiada_witaminy ObjectOneOf(:A :B1 :B12 :B2 :B6 :C)) DataSomeValuesFrom(:posiada_ilość_kalorii DatatypeRestriction(xsd:int xsd:minExclusive "50"^^xsd:int)) DataHasValue(:posiada_białko "false"^^xsd:boolean) DataHasValue(:posiada_cukier "false"^^xsd:boolean)))
+EquivalentClasses(:Owoce ObjectIntersectionOf(:Jedzenie ObjectSomeValuesFrom(:posiada_tłuszcz ObjectOneOf(:Roślinne)) ObjectSomeValuesFrom(:posiada_weglowodany ObjectOneOf(:Proste)) ObjectSomeValuesFrom(:posiada_witaminy ObjectOneOf(:A :B1 :B12 :B2 :B6 :C)) DataSomeValuesFrom(:posiada_ilość_kalorii DatatypeRestriction(xsd:int xsd:minExclusive "50"^^xsd:int)) DataHasValue(:posiada_białko "false"^^xsd:boolean) DataHasValue(:posiada_cukier "true"^^xsd:boolean)))
 SubClassOf(:Owoce :Jedzenie)
 
 # Class: :Słodycze (:Słodycze)
@@ -217,6 +218,11 @@ ClassAssertion(:Tłuszcze :Zwierzęce)
 # Individual: :Złożone (:Złożone)
 
 ClassAssertion(:Węglowodany :Złożone)
+
+# Individual: :test (:test)
+
+ObjectPropertyAssertion(:posiada_weglowodany :test :Złożone)
+DataPropertyAssertion(:posiada_białko :test "true"^^xsd:boolean)
 
 
 DisjointClasses(:Mięso :Nabiał :Owoce :Słodycze :Warzywa :Woda)
