@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
@@ -56,7 +57,11 @@ public class main extends JFrame {
             owlOntology = ontologyManager.loadOntologyFromOntologyDocument(file);
         } catch (OWLOntologyCreationException e) {
             e.printStackTrace();
-        }
+        };
+
+
+
+
         getWitaminy(owlOntology);
 
         DefaultListModel model = new DefaultListModel();
@@ -77,13 +82,7 @@ public class main extends JFrame {
         Clear.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tf_nazwa.setText("");
-                tf_kalorie.setText("");
-                wegle.clearSelection();
-                tluszcze.clearSelection();
-                witaminyList.clearSelection();
-                cb_cukier.setSelected(false);
-                cb_bialko.setSelected(false);
+                clearApp();
             }
         });
 
@@ -113,6 +112,11 @@ public class main extends JFrame {
     }
 
     void createNewIndiviual(OWLOntologyManager ontologyManager, OWLOntology owlOntology) {
+
+        if(tf_nazwa.getText().equals("")){
+            return;
+        }
+
         OWLDataFactory owlDataFactory = ontologyManager.getOWLDataFactory();
 
         OWLIndividual newIndividual = owlDataFactory.getOWLNamedIndividual(IRI.create(prefix + tf_nazwa.getText()));
@@ -197,16 +201,36 @@ public class main extends JFrame {
             e.printStackTrace();
         }
 
-        OWLReasoner owlReasoner = new Reasoner.ReasonerFactory().createReasoner(owlOntology_new);
-        OWLIndividual addedInd = owlDataFactory.getOWLNamedIndividual(IRI.create(prefix+ tf_nazwa.getText()));
-        NodeSet<OWLNamedIndividual> instances = owlReasoner.getInstances(owlDataFactory.getOWLClass(
-                IRI.create(prefix + "Jedzenie")), true);
+        //Reaconer
+        List<String> classes = new ArrayList<String>();
 
-        for(OWLNamedIndividual instance: instances.getFlattened()){
-            System.out.println(instance.getIRI());
+        for (OWLClass cls : owlOntology.getClassesInSignature()) {
+            OWLReasoner owlReasoner = new Reasoner.ReasonerFactory().createReasoner(owlOntology_new);
+            NodeSet<OWLNamedIndividual> instances = owlReasoner.getInstances(cls, false);
+
+            for (OWLNamedIndividual i : instances.getFlattened()) {
+                if(tf_nazwa.getText().equals(i.getIRI().getFragment())){
+                    classes.add(cls.getIRI().getFragment());
+                }
+            }
         }
 
+        reasoner r1 = new reasoner(tf_nazwa.getText(), classes);
+        r1.pack();
+        r1.setVisible(true);
+
+        clearApp();
         
+    }
+
+    void clearApp(){
+        tf_nazwa.setText("");
+        tf_kalorie.setText("");
+        wegle.clearSelection();
+        tluszcze.clearSelection();
+        witaminyList.clearSelection();
+        cb_cukier.setSelected(false);
+        cb_bialko.setSelected(false);
     }
 
 }
